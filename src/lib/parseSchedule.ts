@@ -23,6 +23,25 @@ function clean(v: unknown): string {
   return String(v ?? "").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Format nilai sel jam menjadi "HH:MM".
+ *
+ * SheetJS sering menyimpan jam sebagai PECAHAN HARI (mis. CSV "08:00" -> 0.3333,
+ * atau file Excel dengan kolom bertipe waktu). Bila nilainya angka, konversi
+ * balik ke "HH:MM"; selain itu rapikan apa adanya (mis. teks "08:00").
+ */
+function formatTimeCell(v: unknown): string {
+  if (typeof v === "number" && Number.isFinite(v)) {
+    const frac = v - Math.floor(v); // buang bagian tanggal bila ada
+    let mins = Math.round(frac * 24 * 60);
+    if (mins >= 24 * 60) mins -= 24 * 60;
+    const hh = Math.floor(mins / 60);
+    const mm = mins % 60;
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  }
+  return clean(v);
+}
+
 /** Tebak FlightKind dari teks kolom "Jenis" atau nama sheet. */
 function detectKind(text: string): FlightKind | null {
   const t = text.toLowerCase();
@@ -91,7 +110,7 @@ function parseSheet(
     const r = rows[i] as unknown[];
     const flightNo = clean(r[colMap.flightNo!]);
     const airport = colMap.airport !== undefined ? clean(r[colMap.airport]) : "";
-    const time = colMap.time !== undefined ? clean(r[colMap.time]) : "";
+    const time = colMap.time !== undefined ? formatTimeCell(r[colMap.time]) : "";
 
     // Lewati baris kosong (toleransi).
     if (!flightNo && !airport && !time) continue;

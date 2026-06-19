@@ -14,6 +14,12 @@ interface LogoImgProps {
   /** label kecil yang tampil di placeholder */
   placeholderLabel?: string;
   className?: string;
+  /**
+   * Mode "isi kotak": img memakai max-width/max-height (bukan width/height tetap)
+   * + aspek natural, sehingga logo membesar memenuhi area sampai sisi pertama
+   * menyentuh batas. Dipakai overlay template agar logo tidak mengecil.
+   */
+  fitBox?: boolean;
 }
 
 /**
@@ -29,6 +35,7 @@ export default function LogoImg({
   height,
   placeholderLabel,
   className,
+  fitBox,
 }: LogoImgProps) {
   const [failed, setFailed] = useState(false);
   const show = src && !failed;
@@ -36,16 +43,27 @@ export default function LogoImg({
   const h = height ?? size;
 
   if (show) {
+    // fitBox: max-width/max-height + aspek natural (logo membesar memenuhi area).
+    // default: width/height tetap (perilaku lama untuk desain bawaan).
+    const style: React.CSSProperties = fitBox
+      ? {
+          maxWidth: w,
+          maxHeight: h,
+          width: "auto",
+          height: "auto",
+          objectFit: "contain",
+          display: "block",
+          opacity: 1,
+        }
+      : { width: w, height: h, objectFit: "contain" };
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={alt}
-        width={w}
-        height={h}
         crossOrigin="anonymous"
         onError={() => setFailed(true)}
-        style={{ width: w, height: h, objectFit: "contain" }}
+        style={style}
         className={className}
       />
     );

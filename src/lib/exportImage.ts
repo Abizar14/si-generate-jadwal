@@ -31,6 +31,10 @@ async function nodeToDataUrl(
     height: CANVAS_H,
     pixelRatio,
     cacheBust: true,
+    // Bila ada gambar gagal dimuat (mis. template hilang), pakai pixel transparan
+    // agar export tidak gagal total.
+    imagePlaceholder:
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
     // Latar putih untuk JPG (JPG tidak punya transparansi).
     backgroundColor: format === "jpg" ? "#ffffff" : undefined,
     style: {
@@ -69,7 +73,7 @@ export async function downloadSlide(
   filename: string,
   format: ImageFormat
 ) {
-  const dataUrl = await nodeToDataUrl(node, { format });
+  const dataUrl = await nodeToDataUrl(node, { format, pixelRatio: 2 });
   triggerDownload(dataUrlToBlob(dataUrl), filename);
 }
 
@@ -92,7 +96,7 @@ export async function downloadAllSlides(
 
   const zip = new JSZip();
   for (let i = 0; i < nodes.length; i++) {
-    const dataUrl = await nodeToDataUrl(nodes[i], { format });
+    const dataUrl = await nodeToDataUrl(nodes[i], { format, pixelRatio: 2 });
     const b64 = dataUrl.split(",")[1];
     const num = String(i + 1).padStart(2, "0");
     zip.file(`${baseName}-${num}.${format}`, b64, { base64: true });

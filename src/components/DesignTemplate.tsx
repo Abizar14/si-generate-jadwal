@@ -67,22 +67,25 @@ function FlightRowItem({
         placeholderLabel="logo"
       />
 
-      {/* No penerbangan + nama bandara */}
+      {/* No penerbangan + nama bandara — pakai font body (Poppins) seperti desain asli */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            fontFamily: "var(--font-heading)",
+            fontFamily: "var(--font-body)",
             fontWeight: 700,
-            fontSize: 32,
+            fontSize: 36,
             color: TEXT_DARK,
             lineHeight: 1.1,
+            letterSpacing: "0.2px",
           }}
         >
           {flightNo}
         </div>
         <div
           style={{
-            fontSize: 22,
+            fontFamily: "var(--font-body)",
+            fontWeight: 500,
+            fontSize: 26,
             color: TEXT_MUTED,
             lineHeight: 1.2,
             marginTop: 4,
@@ -98,9 +101,9 @@ function FlightRowItem({
       {/* Jam */}
       <div
         style={{
-          fontFamily: "var(--font-heading)",
+          fontFamily: "var(--font-body)",
           fontWeight: 700,
-          fontSize: 36,
+          fontSize: 44,
           color: TEXT_DARK,
           whiteSpace: "nowrap",
         }}
@@ -214,7 +217,7 @@ const DesignTemplate = forwardRef<HTMLDivElement, DesignTemplateProps>(
             </div>
             <div
               style={{
-                fontFamily: "var(--font-heading)",
+                fontFamily: "var(--font-montserrat)",
                 fontWeight: 800,
                 fontSize: 60,
                 lineHeight: 1.02,
@@ -278,7 +281,7 @@ const DesignTemplate = forwardRef<HTMLDivElement, DesignTemplateProps>(
                 flex: 1,
                 textAlign: "center",
                 color: "#fff",
-                fontFamily: "var(--font-heading)",
+                fontFamily: "var(--font-montserrat)",
                 fontWeight: 700,
                 fontSize: 30,
                 letterSpacing: 2,

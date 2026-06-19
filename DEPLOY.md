@@ -1,4 +1,4 @@
-# Panduan Deploy ke Vercel
+1# Panduan Deploy ke Vercel
 
 Aplikasi ini **client-side penuh** (tanpa backend/DB) → tidak butuh environment
 variable apa pun. Konfigurasi ada di [`vercel.json`](vercel.json).
@@ -17,7 +17,7 @@ variable apa pun. Konfigurasi ada di [`vercel.json`](vercel.json).
 2. Buka <https://vercel.com> → **Add New… → Project** → import repo-nya.
 3. Vercel auto-detect Next.js. Biarkan setting default, klik **Deploy**.
 4. Setiap `git push` ke branch utama akan otomatis re-deploy.
-
+1
 ## Opsi B — Lewat Vercel CLI
 
 ```bash

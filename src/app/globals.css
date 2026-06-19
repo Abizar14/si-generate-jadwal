@@ -2,7 +2,377 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =====================================================================
+   TEMA UI "DARK + MINT" — hanya untuk antarmuka aplikasi (halaman, panel,
+   tombol, status). Desain hasil export (DesignTemplate / TemplateSlide,
+   1080x1920) TIDAK memakai tema ini — warnanya tetap biru-putih terang.
+   ===================================================================== */
+
+/* =====================================================================
+   TEMA (5 MODE) — dipilih lewat [data-theme] di <html>.
+   Cukup tukar nilai variabel; komponen UI semuanya memakai variabel ini.
+   Variabel ini HANYA untuk antarmuka — gambar export tetap pakai hex sendiri.
+   ===================================================================== */
+/* Nilai warna = channel "R G B" agar bisa dipakai dengan alpha:
+   rgb(var(--x) / <alpha>). CTA pakai hex langsung (tak perlu alpha). */
+:root,
+[data-theme="mint"] {
+  --bg: 11 15 20; --surface: 20 26 34; --line: 42 51 64;
+  --accent: 52 227 164; --accent2: 34 211 238;
+  --text: 255 255 255; --muted: 152 162 179; --danger: 255 107 107;
+  --cta-from: #3ce8a0; --cta-to: #1fa9d6; --cta-text: #04342c;
+}
+[data-theme="indigo"] {
+  --bg: 12 15 26; --surface: 23 27 46; --line: 42 49 80;
+  --accent: 124 108 255; --accent2: 34 211 238;
+  --text: 255 255 255; --muted: 154 160 181; --danger: 255 107 107;
+  --cta-from: #7c6cff; --cta-to: #22d3ee; --cta-text: #ffffff;
+}
+[data-theme="ember"] {
+  --bg: 20 16 14; --surface: 33 26 22; --line: 58 44 34;
+  --accent: 255 120 73; --accent2: 255 177 61;
+  --text: 255 255 255; --muted: 168 155 146; --danger: 255 107 107;
+  --cta-from: #ff7849; --cta-to: #ffb13d; --cta-text: #3a1c0c;
+}
+[data-theme="sky"] {
+  --bg: 10 27 46; --surface: 18 41 63; --line: 28 58 85;
+  --accent: 56 189 248; --accent2: 60 232 160;
+  --text: 255 255 255; --muted: 141 166 189; --danger: 255 107 107;
+  --cta-from: #38bdf8; --cta-to: #3ce8a0; --cta-text: #04293a;
+}
+[data-theme="light"] {
+  --bg: 242 246 251; --surface: 255 255 255; --line: 228 234 241;
+  --accent: 37 99 235; --accent2: 34 211 238;
+  --text: 31 42 55; --muted: 107 114 128; --danger: 220 38 38;
+  --cta-from: #2563eb; --cta-to: #22d3ee; --cta-text: #ffffff;
+}
+
+/* Alias: --mint/--cyan mengikuti aksen tema aktif (juga channel). */
+:root {
+  --mint: var(--accent);
+  --cyan: var(--accent2);
+}
+
 html,
 body {
-  background: #eef2f7;
+  min-height: 100%;
+  color: rgb(var(--text));
+  /* Latar + sorot aksen tipis di sudut (mengikuti tema). */
+  background:
+    radial-gradient(900px 520px at 88% -10%, rgb(var(--accent) / 0.12), transparent 60%),
+    radial-gradient(820px 480px at 8% 2%, rgb(var(--accent2) / 0.09), transparent 58%),
+    rgb(var(--bg));
+  background-attachment: fixed;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* =====================================================================
+   BACKGROUND HIDUP — blob aurora (ikut --accent/--accent2) + grid titik.
+   Opacity blob beda per tema (light jauh lebih halus agar tidak menabrak).
+   ===================================================================== */
+:root,
+[data-theme="mint"] { --blob-opacity: 0.3; }
+[data-theme="indigo"] { --blob-opacity: 0.32; }
+[data-theme="ember"] { --blob-opacity: 0.28; }
+[data-theme="sky"] { --blob-opacity: 0.3; }
+[data-theme="light"] { --blob-opacity: 0.1; }
+
+@keyframes drift1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(50px, 30px); }
+}
+@keyframes drift2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-60px, 24px); }
+}
+@keyframes drift3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -40px); }
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: var(--blob-opacity);
+}
+.animate-drift1 { animation: drift1 16s ease-in-out infinite; }
+.animate-drift2 { animation: drift2 20s ease-in-out infinite; }
+.animate-drift3 { animation: drift3 24s ease-in-out infinite; }
+.bg-dotgrid {
+  background-image: radial-gradient(rgb(var(--text) / 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* =====================================================================
+   SCROLL-SNAP PER HALAMAN — tiap <section className="snap-page"> = 1 layar.
+   Pakai 'proximity' (bukan 'mandatory') agar section yang lebih tinggi dari
+   layar tetap bisa di-scroll penuh tanpa terjebak.
+   ===================================================================== */
+html {
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+.snap-page {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+}
+
+/* =====================================================================
+   KEYFRAMES
+   ===================================================================== */
+
+/* Marching ants untuk border dropzone */
+@keyframes dropzone-march {
+  to {
+    background-position: 18px 0, -18px 100%, 0 -18px, 100% 18px;
+  }
+}
+
+/* Awan melayang horizontal */
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-25vw);
+  }
+  to {
+    transform: translateX(125vw);
+  }
+}
+
+/* Pesawat latar melintas naik */
+@keyframes plane-cross {
+  0% {
+    transform: translate(-15vw, 16vh) rotate(-18deg);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(115vw, -18vh) rotate(-18deg);
+    opacity: 0;
+  }
+}
+
+/* Mengambang naik-turun lembut */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pesawat di badge/ikon: ikut miring 45deg */
+@keyframes float-plane {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-6deg);
+  }
+}
+
+/* Masuk: naik + fade */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Jejak garis putus-putus berjalan */
+@keyframes dash-move {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+/* Kilau loading */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Pulse halus untuk skeleton */
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* =====================================================================
+   UTILITAS
+   ===================================================================== */
+.animate-cloud {
+  animation: cloud-drift linear infinite;
+}
+.animate-plane-cross {
+  animation: plane-cross 30s linear infinite;
+}
+.animate-float {
+  animation: float-soft 4s ease-in-out infinite;
+}
+.animate-float-plane {
+  animation: float-plane 3.5s ease-in-out infinite;
+}
+.animate-pulse-soft {
+  animation: pulse-soft 1.8s ease-in-out infinite;
+}
+
+.slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.slide-up-350 {
+  animation: slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ----- Kartu / panel ----- */
+.card {
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--line));
+  border-radius: 28px;
+  box-shadow: 0 18px 45px -15px rgba(0, 0, 0, 0.55);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.card {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease, border-color 0.35s ease, background-color 0.35s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 60px -18px rgba(0, 0, 0, 0.7);
+  border-color: rgb(var(--accent) / 0.45);
+}
+
+/* ----- Dropzone marching-ants ----- */
+.dropzone {
+  position: relative;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.015);
+  background-image:
+    linear-gradient(90deg, rgb(var(--line)) 50%, transparent 50%),
+    linear-gradient(90deg, rgb(var(--line)) 50%, transparent 50%),
+    linear-gradient(0deg, rgb(var(--line)) 50%, transparent 50%),
+    linear-gradient(0deg, rgb(var(--line)) 50%, transparent 50%);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 18px 2px, 18px 2px, 2px 18px, 2px 18px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: dropzone-march 0.7s linear infinite;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+.dropzone:hover {
+  background-color: rgb(var(--accent) / 0.05);
+  background-image:
+    linear-gradient(90deg, rgb(var(--accent)) 50%, transparent 50%),
+    linear-gradient(90deg, rgb(var(--accent)) 50%, transparent 50%),
+    linear-gradient(0deg, rgb(var(--accent)) 50%, transparent 50%),
+    linear-gradient(0deg, rgb(var(--accent)) 50%, transparent 50%);
+}
+.dropzone-active {
+  background-color: rgb(var(--accent) / 0.1);
+  transform: scale(1.02);
+  animation-duration: 0.35s;
+  background-image:
+    linear-gradient(90deg, rgb(var(--accent)) 50%, transparent 50%),
+    linear-gradient(90deg, rgb(var(--accent)) 50%, transparent 50%),
+    linear-gradient(0deg, rgb(var(--accent)) 50%, transparent 50%),
+    linear-gradient(0deg, rgb(var(--accent)) 50%, transparent 50%);
+}
+
+/* ----- Tombol utama gradient (CTA: Generate / Download / Mulai) ----- */
+/* Teks gelap agar kontras tinggi di atas gradient mint→cyan. */
+.btn-primary,
+.btn-navy {
+  position: relative;
+  overflow: hidden;
+  background-size: 180% auto;
+  background-image: linear-gradient(135deg, var(--cta-from) 0%, var(--cta-to) 100%);
+  color: var(--cta-text);
+  transition: background-position 0.5s ease, transform 0.18s ease,
+    box-shadow 0.3s ease, filter 0.3s ease;
+}
+.btn-primary:hover:not(:disabled),
+.btn-navy:hover:not(:disabled) {
+  background-position: right center;
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 16px 32px -10px rgba(52, 227, 164, 0.55);
+}
+.btn-primary:active:not(:disabled),
+.btn-navy:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ----- Tombol sekunder (outline, transparan) ----- */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgb(var(--line));
+  color: rgb(var(--text));
+  transition: transform 0.18s ease, box-shadow 0.3s ease, background 0.3s ease,
+    border-color 0.3s ease;
+}
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: rgb(var(--accent));
+  background: rgb(var(--accent) / 0.08);
+}
+
+/* ----- Skeleton shimmer (dark) ----- */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--line));
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* ----- Swatch warna ----- */
+.swatch {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.swatch:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* Hormati preferensi reduce-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
