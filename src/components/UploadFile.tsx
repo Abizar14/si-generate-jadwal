@@ -43,7 +43,7 @@ export default function UploadFile({ onFile, disabled, currentFileName }: Upload
       <input
         ref={inputRef}
         type="file"
-        accept=".xlsx,.xls,.csv"
+        accept=".pdf,.xlsx,.xls,.csv,application/pdf"
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
@@ -66,7 +66,7 @@ export default function UploadFile({ onFile, disabled, currentFileName }: Upload
           <p className="text-lg font-bold text-fg">Drag &amp; drop file di sini</p>
           <p className="mt-1 text-sm text-muted">atau klik untuk memilih file</p>
           <span className="mt-4 rounded-full bg-white/5 px-4 py-1.5 text-xs font-medium text-muted ring-1 ring-line">
-            Format: .xlsx, .xls, .csv
+            Format: PDF jadwal AMC · .xlsx · .xls · .csv
           </span>
         </>
       )}

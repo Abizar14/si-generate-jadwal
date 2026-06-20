@@ -224,7 +224,7 @@ export default function Home() {
           <Reveal delay={0.3}>
             <p className="mx-auto mt-5 max-w-xl text-base text-muted sm:text-lg">
               Jadwal penerbangan Bandara APT Pranoto Samarinda jadi gambar Instagram
-              Story siap posting — cukup upload Excel/CSV.
+              Story siap posting — cukup upload PDF jadwal AMC (atau Excel/CSV).
             </p>
           </Reveal>
 

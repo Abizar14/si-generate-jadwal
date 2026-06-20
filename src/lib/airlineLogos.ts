@@ -23,13 +23,14 @@ export const AIRLINE_LOGOS: AirlineLogo[] = [
   { prefix: "GIA", name: "Garuda Indonesia", file: "garuda.png" },
   { prefix: "BTK", name: "Batik Air", file: "batik-air.png" },
   { prefix: "PK SNH", name: "Smart Aviation", file: "smart-aviation.png" },
+  { prefix: "PK SNP", name: "Smart Aviation", file: "smart-aviation.png" },
   // Tambah di sini:
   // { prefix: "QG", name: "Citilink (alt)", file: "citilink.png" },
 ];
 
 /** Normalisasi kode untuk pencocokan: uppercase + rapikan spasi. */
 function normalizeCode(code: string): string {
-  return code.trim().toUpperCase().replace(/\s+/g, " ");
+  return code.trim().toUpperCase().replace(/-/g, " ").replace(/\s+/g, " ");
 }
 
 /**

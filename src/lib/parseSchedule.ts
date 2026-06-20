@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import type { FlightKind, FlightRow, ParseResult } from "./types";
+import { parsePdfFile } from "./parsePdf";
 
 // ===== MAPPING NAMA KOLOM =====
 // Aplikasi mencocokkan nama kolom secara fleksibel (huruf besar/kecil bebas,
@@ -188,9 +189,15 @@ export function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
 /** Baca File (dari input upload) menjadi ParseResult. Throw Error jika gagal. */
 export async function parseFile(file: File): Promise<ParseResult> {
   const name = file.name.toLowerCase();
+
+  // PDF jadwal AMC (APT Pranoto) → parser khusus.
+  if (name.endsWith(".pdf") || file.type === "application/pdf") {
+    return parsePdfFile(file);
+  }
+
   if (!/\.(xlsx|xls|csv)$/.test(name)) {
     throw new Error(
-      `Format file tidak didukung: "${file.name}". Gunakan .xlsx, .xls, atau .csv.`
+      `Format file tidak didukung: "${file.name}". Gunakan .pdf, .xlsx, .xls, atau .csv.`
     );
   }
 
