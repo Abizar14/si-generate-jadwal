@@ -12,6 +12,8 @@ export interface FlightRow {
   airport: string;
   /** Jam, mis. "09:05". */
   time: string;
+  /** Conveyor bagasi (kedatangan) / boarding gate (keberangkatan), mis. "1" / "A 3". */
+  info?: string;
 }
 
 /** Satu slide siap-render (1080x1920). */

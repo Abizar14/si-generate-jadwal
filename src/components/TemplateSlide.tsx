@@ -58,7 +58,30 @@ export interface OverlayConfig {
   dateSize: number;
 }
 
-/** Default hasil ukur template APT Pranoto 1080x1920 (13 slot baris). */
+// Geometri grid template BAWAAN (garis digambar kode, bukan di PNG).
+// Semua baris TINGGINYA SAMA (seragam) — ada sedikit padding di atas agar baris
+// pertama tidak menempel bar "AAP", tanpa membuat sel pertama lebih tinggi.
+export const BUILTIN_GRID = {
+  contentTop: 580, // baris pertama mulai sedikit di bawah bar "AAP" (beri ruang)
+  tableBottom: 1677, // tepi dalam bawah kartu
+  baseRowHeight: 85, // jarak baris saat data sedikit (lega seperti template lama)
+  lineX0: 114,
+  lineX1: 966,
+  lineColor: "#D8E1EA",
+};
+
+/**
+ * Tinggi baris dinamis & SERAGAM: data sedikit memakai 85px (lega),
+ * banyak data (>~13) otomatis dirapatkan agar tetap muat sampai dasar kartu.
+ */
+export function gridRowHeight(rowCount: number): number {
+  return Math.min(
+    BUILTIN_GRID.baseRowHeight,
+    (BUILTIN_GRID.tableBottom - BUILTIN_GRID.contentTop) / Math.max(1, rowCount)
+  );
+}
+
+/** Default overlay untuk template UNGGAHAN sendiri (built-in pakai grid dinamis). */
 export const DEFAULT_OVERLAY: OverlayConfig = {
   firstCenterY: 616,
   rowHeight: 84,
@@ -97,11 +120,21 @@ interface TemplateSlideProps {
   /** Sumber gambar template (path statis atau data URL upload). */
   templateSrc: string;
   overlay: OverlayConfig;
+  /** Template bawaan → garis & jarak baris digambar otomatis (dinamis). */
+  autoGrid?: boolean;
 }
 
 const TemplateSlide = forwardRef<HTMLDivElement, TemplateSlideProps>(
-  function TemplateSlide({ slide, dateText, templateSrc, overlay }, ref) {
+  function TemplateSlide({ slide, dateText, templateSrc, overlay, autoGrid = false }, ref) {
     const o = overlay;
+    const n = slide.rows.length;
+    // Grid dinamis (template bawaan): jarak baris & garis menyesuaikan jumlah data.
+    const gridRH = gridRowHeight(n);
+    // Semua baris seragam: pusat baris ke-i di tengah selnya masing-masing.
+    const rowCenterY = (i: number) =>
+      autoGrid
+        ? BUILTIN_GRID.contentTop + (i + 0.5) * gridRH
+        : o.firstCenterY + i * o.rowHeight;
     return (
       <div
         ref={ref}
@@ -131,6 +164,23 @@ const TemplateSlide = forwardRef<HTMLDivElement, TemplateSlideProps>(
           }}
         />
 
+        {/* Garis pemisah baris (digambar dinamis — hanya untuk template bawaan).
+            Jumlah garis = jumlah baris − 1, jadi area kosong tidak bergaris. */}
+        {autoGrid &&
+          Array.from({ length: Math.max(0, n - 1) }).map((_, i) => (
+            <div
+              key={`grid-line-${i}`}
+              style={{
+                position: "absolute",
+                left: BUILTIN_GRID.lineX0,
+                width: BUILTIN_GRID.lineX1 - BUILTIN_GRID.lineX0,
+                top: BUILTIN_GRID.contentTop + (i + 1) * gridRH,
+                height: 2,
+                background: BUILTIN_GRID.lineColor,
+              }}
+            />
+          ))}
+
         {/* Tanggal (pusat di dateX,dateY) */}
         {o.showDate && (
           <div
@@ -152,7 +202,7 @@ const TemplateSlide = forwardRef<HTMLDivElement, TemplateSlideProps>(
 
         {/* Baris data — tiap elemen diposisikan absolut sesuai koordinat Canva */}
         {slide.rows.map((r, i) => {
-          const centerY = o.firstCenterY + i * o.rowHeight;
+          const centerY = rowCenterY(i);
           const logo = findAirlineLogo(r.flightNo);
           return (
             <div key={i}>

@@ -367,6 +367,41 @@ html {
   box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.6);
 }
 
+/* =====================================================================
+   CETAK — hanya dokumen #print-root (PDF resmi A4) yang tampil saat print.
+   ===================================================================== */
+@media screen {
+  #print-root {
+    display: none;
+  }
+}
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+  html {
+    scroll-snap-type: none;
+  }
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #print-root,
+  #print-root * {
+    visibility: visible !important;
+  }
+  #print-root {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
 /* Hormati preferensi reduce-motion */
 @media (prefers-reduced-motion: reduce) {
   *,

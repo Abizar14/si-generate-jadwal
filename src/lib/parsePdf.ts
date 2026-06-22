@@ -34,19 +34,25 @@ function normFlight(code: string): string {
   return code.replace(/-/g, " ").replace(/\s+/g, " ").trim().toUpperCase();
 }
 
-// Baris = KODE (WON 1481 / PK-SNH) + NAMA BANDARA + JAM (8:20:00).
-const ROW_RE = /(PK-?[A-Z]{2,3}|[A-Z]{2,3}\s\d{3,4})\s+(.+?)\s+(\d{1,2}:\d{2}:\d{2})/g;
+// Baris = KODE (WON 1481 / PK-SNH) + NAMA BANDARA + JAM (8:20:00) + (opsional)
+// kolom terakhir: kedatangan → conveyor (angka), keberangkatan → gate ("A 3"/"-").
+const FLIGHT = "(PK-?[A-Z]{2,3}|[A-Z]{2,3}\\s\\d{3,4})";
+const TIME = "(\\d{1,2}:\\d{2}:\\d{2})";
+const ARR_RE = new RegExp(`${FLIGHT}\\s+(.+?)\\s+${TIME}(?:\\s+(\\d))?`, "g");
+const DEP_RE = new RegExp(`${FLIGHT}\\s+(.+?)\\s+${TIME}(?:\\s+([AB]\\s?\\d|-))?`, "g");
 
 function parseSection(text: string, kind: FlightKind, warnings: string[]): FlightRow[] {
   const out: FlightRow[] = [];
-  ROW_RE.lastIndex = 0;
+  const re = kind === "arrival" ? ARR_RE : DEP_RE;
+  re.lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = ROW_RE.exec(text)) !== null) {
+  while ((m = re.exec(text)) !== null) {
     out.push({
       kind,
       flightNo: normFlight(m[1]),
       airport: mapAirport(m[2], warnings),
       time: fmtTime(m[3]),
+      info: (m[4] ?? "").replace(/\s+/g, " ").trim(),
     });
   }
   return out;

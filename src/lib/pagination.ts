@@ -3,7 +3,7 @@ import type { FlightKind, FlightRow, Slide } from "./types";
 // ===== BATAS BARIS PER SLIDE =====
 // Kasus normal = 1 slide (muat penuh). Jika baris melebihi batas ini,
 // otomatis dipecah jadi beberapa slide. Ubah angka ini sesuai kebutuhan.
-export const MAX_ROWS_PER_SLIDE = 13;
+export const MAX_ROWS_PER_SLIDE = 15;
 
 const TITLE: Record<FlightKind, string> = {
   departure: "JADWAL KEBERANGKATAN",

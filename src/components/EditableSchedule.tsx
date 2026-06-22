@@ -38,11 +38,12 @@ export default function EditableSchedule({ rows, onChange }: EditableSchedulePro
       </div>
 
       {/* Header kolom */}
-      <div className="hidden grid-cols-[110px_1fr_1.4fr_92px_36px] gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted sm:grid">
+      <div className="hidden grid-cols-[104px_1fr_1.4fr_80px_72px_36px] gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted sm:grid">
         <span>Jenis</span>
         <span>No. Penerbangan</span>
         <span>Bandara</span>
         <span>Jam</span>
+        <span>Conv/Gate</span>
         <span />
       </div>
 
@@ -50,7 +51,7 @@ export default function EditableSchedule({ rows, onChange }: EditableSchedulePro
         {rows.map((r, i) => (
           <div
             key={i}
-            className="grid grid-cols-2 items-center gap-2 rounded-xl border border-line bg-white/[0.03] p-2 sm:grid-cols-[110px_1fr_1.4fr_92px_36px] sm:border-0 sm:bg-transparent sm:p-0"
+            className="grid grid-cols-2 items-center gap-2 rounded-xl border border-line bg-white/[0.03] p-2 sm:grid-cols-[104px_1fr_1.4fr_80px_72px_36px] sm:border-0 sm:bg-transparent sm:p-0"
           >
             <select
               value={r.kind}
@@ -77,6 +78,13 @@ export default function EditableSchedule({ rows, onChange }: EditableSchedulePro
               onChange={(e) => update(i, { time: e.target.value })}
               placeholder="09:05"
               className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg outline-none transition placeholder:text-muted/60 focus:border-mint focus:ring-2 focus:ring-mint/30"
+            />
+            <input
+              value={r.info ?? ""}
+              onChange={(e) => update(i, { info: e.target.value })}
+              placeholder={r.kind === "arrival" ? "1" : "A 3"}
+              title="Conveyor (kedatangan) / Boarding Gate (keberangkatan)"
+              className="rounded-lg border border-line bg-surface px-2 py-2 text-center text-sm text-fg outline-none transition placeholder:text-muted/60 focus:border-mint focus:ring-2 focus:ring-mint/30"
             />
             <button
               onClick={() => remove(i)}

@@ -14,6 +14,8 @@ interface SlidePreviewProps {
   templateSrc?: string | null;
   /** Geometri overlay (dipakai bila templateSrc ada). */
   overlay?: OverlayConfig;
+  /** Template bawaan → garis & jarak baris otomatis (dinamis). */
+  autoGrid?: boolean;
 }
 
 /**
@@ -25,7 +27,7 @@ interface SlidePreviewProps {
  * jika tidak, pakai desain bawaan (DesignTemplate).
  */
 const SlidePreview = forwardRef<HTMLDivElement, SlidePreviewProps>(
-  function SlidePreview({ slide, dateText, scale = 0.3, templateSrc, overlay }, ref) {
+  function SlidePreview({ slide, dateText, scale = 0.3, templateSrc, overlay, autoGrid }, ref) {
     return (
       <div
         style={{
@@ -51,6 +53,7 @@ const SlidePreview = forwardRef<HTMLDivElement, SlidePreviewProps>(
               dateText={dateText}
               templateSrc={templateSrc}
               overlay={overlay}
+              autoGrid={autoGrid}
             />
           ) : (
             <DesignTemplate ref={ref} slide={slide} dateText={dateText} />

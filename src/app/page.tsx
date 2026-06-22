@@ -22,6 +22,7 @@ import {
   Instagram,
   Mail,
   Github,
+  FileText,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import UploadFile from "@/components/UploadFile";
@@ -32,6 +33,7 @@ import PlaneScroll from "@/components/PlaneScroll";
 import Navbar from "@/components/Navbar";
 import EditableSchedule from "@/components/EditableSchedule";
 import { PaletteSection, PanduanSection, TipsSection } from "@/components/BottomCards";
+import OfficialSchedulePDF from "@/components/OfficialSchedulePDF";
 import { type OverlayConfig, DEFAULT_OVERLAY } from "@/components/TemplateSlide";
 import { parseFile } from "@/lib/parseSchedule";
 import { buildSlides, MAX_ROWS_PER_SLIDE } from "@/lib/pagination";
@@ -131,6 +133,10 @@ export default function Home() {
       ];
     });
   }, [selectedKinds, slides]);
+
+  // Untuk PDF resmi (selalu semua data, kedua tabel).
+  const allDepartures = useMemo(() => rows.filter((r) => r.kind === "departure"), [rows]);
+  const allArrivals = useMemo(() => rows.filter((r) => r.kind === "arrival"), [rows]);
 
   async function handleFile(file: File) {
     setError(null);
@@ -437,7 +443,7 @@ export default function Home() {
                       className="w-24 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg outline-none transition focus:border-mint focus:ring-2 focus:ring-mint/30"
                     />
                     <p className="mt-1 text-xs text-muted">
-                      Default 13 — lebih dari itu otomatis dipecah jadi beberapa slide.
+                      Default 15 — lebih dari itu otomatis dipecah jadi beberapa slide.
                     </p>
                   </Field>
                 )}
@@ -495,6 +501,22 @@ export default function Home() {
                     </>
                   )}
                 </button>
+
+                {result && (
+                  <>
+                    <button
+                      onClick={() => window.print()}
+                      className="btn-ghost flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold"
+                    >
+                      <FileText className="h-5 w-5" />
+                      Unduh PDF Resmi (A4)
+                    </button>
+                    <p className="text-center text-xs text-muted">
+                      Pakai semua data ({allArrivals.length} datang · {allDepartures.length} berangkat).
+                      Di dialog cetak pilih <b>Simpan sebagai PDF</b> &amp; matikan header/footer.
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </section>
@@ -532,6 +554,7 @@ export default function Home() {
                         scale={0.3}
                         templateSrc={templateFor(slide.kind)}
                         overlay={overlay}
+                        autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
                         ref={(el) => {
                           slideRefs.current[i] = el;
                         }}
@@ -579,6 +602,15 @@ export default function Home() {
           </p>
         </Reveal>
       </main>
+
+      {/* Dokumen PDF resmi (A4) — hanya tampil saat cetak (lihat globals.css). */}
+      <div id="print-root">
+        <OfficialSchedulePDF
+          dateText={dateText}
+          departures={allDepartures}
+          arrivals={allArrivals}
+        />
+      </div>
     </>
   );
 }
