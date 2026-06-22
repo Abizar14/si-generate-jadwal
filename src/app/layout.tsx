@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Poppins, Bricolage_Grotesque } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 // === FONT GAMBAR EXPORT (jangan ubah) =================================
@@ -71,6 +72,7 @@ export default function RootLayout({
         }}
       >
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
