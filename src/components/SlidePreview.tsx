@@ -3,7 +3,7 @@
 import { forwardRef } from "react";
 import type { Slide } from "@/lib/types";
 import DesignTemplate from "./DesignTemplate";
-import TemplateSlide, { type OverlayConfig } from "./TemplateSlide";
+import TemplateSlide, { type OverlayConfig, type GridPresetKey } from "./TemplateSlide";
 
 interface SlidePreviewProps {
   slide: Slide;
@@ -16,6 +16,8 @@ interface SlidePreviewProps {
   overlay?: OverlayConfig;
   /** Template bawaan → garis & jarak baris otomatis (dinamis). */
   autoGrid?: boolean;
+  /** Preset kepadatan baris grid bawaan (padat 15 / lega 13). */
+  gridPreset?: GridPresetKey;
 }
 
 /**
@@ -27,7 +29,10 @@ interface SlidePreviewProps {
  * jika tidak, pakai desain bawaan (DesignTemplate).
  */
 const SlidePreview = forwardRef<HTMLDivElement, SlidePreviewProps>(
-  function SlidePreview({ slide, dateText, scale = 0.3, templateSrc, overlay, autoGrid }, ref) {
+  function SlidePreview(
+    { slide, dateText, scale = 0.3, templateSrc, overlay, autoGrid, gridPreset },
+    ref
+  ) {
     return (
       <div
         style={{
@@ -54,6 +59,7 @@ const SlidePreview = forwardRef<HTMLDivElement, SlidePreviewProps>(
               templateSrc={templateSrc}
               overlay={overlay}
               autoGrid={autoGrid}
+              gridPreset={gridPreset}
             />
           ) : (
             <DesignTemplate ref={ref} slide={slide} dateText={dateText} />

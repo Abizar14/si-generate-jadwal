@@ -15,6 +15,8 @@ const AIRPORTS: [RegExp, string][] = [
   [/KALIMARAU|BERAU/i, "BANDAR UDARA KALIMARAU (BEJ)"],
   [/MARATUA/i, "BANDAR UDARA MARATUA (RTU)"],
   [/YOGYAKARTA/i, "BANDAR UDARA YOGYAKARTA (YIA)"],
+  [/UYANG\s*LAHAI/i, "BANDAR UDARA UYANG LAHAI (MHU)"],
+  [/DATAH\s*DAWAI/i, "BANDAR UDARA DATAH DAWAI (DTD)"],
 ];
 
 function mapAirport(raw: string, warnings: string[]): string {

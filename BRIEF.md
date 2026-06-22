@@ -19,7 +19,7 @@ Upload (PDF / XLSX / CSV)
   → parseFile()            src/lib/parseSchedule.ts  (PDF → parsePdf.ts)
   → { departures, arrivals, warnings }
   → Pilih jenis + edit     src/app/page.tsx, EditableSchedule.tsx
-  → buildSlides()          src/lib/pagination.ts     (auto-split per 13 baris)
+  → buildSlides()          src/lib/pagination.ts     (auto-split ikut preset 15/13 baris)
   → <TemplateSlide>        overlay teks/logo di atas /template-jadwal/*.png
   → downloadAllSlides()    src/lib/exportImage.ts    (PNG/JPG, >1 → .zip)
 ```
@@ -34,10 +34,11 @@ Upload (PDF / XLSX / CSV)
 | **Parsing PDF AMC** | Baca PDF jadwal AMC, ekstrak baris, rapikan nama bandara, mapping jam & logo | `lib/parsePdf.ts` | ✅ (khusus template AMC) |
 | **Pilih jenis & template** | Tombol Keberangkatan/Kedatangan (bisa dua-duanya), template tampil otomatis | `app/page.tsx` | ✅ |
 | **Render overlay** | Stempel logo/no penerbangan/bandara/jam/tanggal di atas template, koordinat Canva | `components/TemplateSlide.tsx` | ✅ |
+| **Preset template (kepadatan baris)** | Template 1 *Lega* (13 baris, baris lebih tinggi) / Template 2 *Padat* (15 baris, default); kotak menyusut dinamis di keduanya | `app/page.tsx`, `components/TemplateSlide.tsx` | ✅ |
 | **Editor jadwal** | Edit/tambah/hapus baris inline, preview live | `components/EditableSchedule.tsx` | ✅ |
 | **Mapping logo maskapai** | Prefix kode → logo (WON/SJV/CTV/GIA/BTK/PK SN*) | `lib/airlineLogos.ts` | ✅ |
 | **Export gambar** | PNG/JPG, pixelRatio 2, multi-slide → zip, anti-gagal (imagePlaceholder) | `lib/exportImage.ts` | ✅ |
-| **Pagination** | Auto-pecah > 13 baris jadi beberapa slide | `lib/pagination.ts` | ✅ |
+| **Pagination** | Auto-pecah ikut preset (15 default / 13) jadi beberapa slide | `lib/pagination.ts` | ✅ |
 | **Tanggal** | Format Indonesia, default hari ini, bisa diedit manual | `lib/formatDate.ts` | 🔶 (belum auto dari PDF) |
 | **Tema (5 mode)** | Mint/Indigo/Ember/Sky/Light via CSS var + localStorage | `lib/theme.ts`, `globals.css` | ✅ |
 | **Latar animatif** | Aurora blob + grid + pesawat ikut scroll + field logo parallax | `SkyBackground/PlaneScroll/LogoField` | ✅ |
@@ -51,14 +52,15 @@ Upload (PDF / XLSX / CSV)
 
 - [x] Upload & parse **Excel/CSV**
 - [x] Upload & parse **PDF jadwal AMC** (28 baris contoh ter-parse benar)
-- [x] Rapikan nama bandara dari PDF ke gaya desain (`BANDAR UDARA … (KODE)`)
+- [x] Rapikan nama bandara dari PDF ke gaya desain (`BANDAR UDARA … (KODE)`) — **11 bandara** dikenal (+UYANG LAHAI/MHU, DATAH DAWAI/DTD)
 - [x] Pisah & filter **keberangkatan / kedatangan**
 - [x] Pilih jenis → **template langsung tampil** + tanggal hari ini
 - [x] Render **overlay** sesuai koordinat Canva (font/bobot/warna #596A76)
 - [x] Editor jadwal inline (tambah/edit/hapus)
 - [x] Mapping **logo maskapai** otomatis (+ PK-SNH/PK-SNP, kode ber-strip)
 - [x] Export **PNG/JPG**, **pixelRatio 2**, multi-slide → **.zip**
-- [x] Auto-split **>13 baris** per slide
+- [x] Auto-split ikut preset (**15 default / 13** baris) per slide
+- [x] **Dua preset template**: Template 1 (*Lega* · 13 baris, baris lebih tinggi) / Template 2 (*Padat* · 15 baris) — pilih di panel, **kotak menyusut dinamis** mengikuti jumlah baris di keduanya
 - [x] **Theme switcher 5 mode** + persist + no-flash
 - [x] Latar hidup (aurora) + **pesawat ikut scroll** + **field logo** parallax
 - [x] **Scroll-snap** per halaman (Hero/Generate/Palet/Panduan/Tips)
@@ -71,7 +73,7 @@ Upload (PDF / XLSX / CSV)
 - [ ] **Tampilkan Conveyor bagasi & Boarding Gate** (data ada di PDF tapi dibuang)
 - [ ] **Template kosong final** dari Canva untuk `keberangkatan.png` & `kedatangan.png` (pill tanggal benar-benar kosong, kalibrasi akhir koordinat)
 - [ ] Parser PDF masih **terikat layout AMC** (pemisah "BOARDING GATE") — belum tahan kalau format berubah total
-- [ ] **Peta bandara** baru terbatas 9 lokasi — bandara lain tampil apa adanya (+peringatan)
+- [ ] **Peta bandara** baru terbatas 11 lokasi — bandara lain tampil apa adanya (+peringatan)
 - [ ] **pdf.js worker dari CDN** (butuh internet saat runtime) — belum di-bundle lokal
 - [ ] **Validasi data** (deteksi jam bentrok / gate dobel / format jam salah)
 - [ ] **Tidak ada test otomatis** (unit test parser PDF/Excel)

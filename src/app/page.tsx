@@ -37,7 +37,12 @@ import Navbar from "@/components/Navbar";
 import EditableSchedule from "@/components/EditableSchedule";
 import { PaletteSection, PanduanSection, TipsSection } from "@/components/BottomCards";
 import OfficialSchedulePDF from "@/components/OfficialSchedulePDF";
-import { type OverlayConfig, DEFAULT_OVERLAY } from "@/components/TemplateSlide";
+import {
+  type OverlayConfig,
+  type GridPresetKey,
+  DEFAULT_OVERLAY,
+  GRID_PRESETS,
+} from "@/components/TemplateSlide";
 import { parseFile } from "@/lib/parseSchedule";
 import { buildSlides, MAX_ROWS_PER_SLIDE } from "@/lib/pagination";
 import { downloadAllSlides, type ImageFormat } from "@/lib/exportImage";
@@ -71,6 +76,14 @@ export default function Home() {
   const [dateText, setDateText] = useState(tanggalHariIni());
   const [maxRows, setMaxRows] = useState(MAX_ROWS_PER_SLIDE);
   const [format, setFormat] = useState<ImageFormat>("png");
+
+  // Preset template: "padat" (15 baris, default) / "lega" (13 baris, baris lebih tinggi).
+  // Memilih preset juga menyetel maks baris agar kotak & auto-split selaras.
+  const [templatePreset, setTemplatePreset] = useState<GridPresetKey>("padat");
+  function pickPreset(p: GridPresetKey) {
+    setTemplatePreset(p);
+    setMaxRows(GRID_PRESETS[p].maxRows);
+  }
 
   // Jenis jadwal yang dipilih — bisa dua-duanya (menentukan template & filter data).
   const [selectedKinds, setSelectedKinds] = useState<FlightKind[]>([]);
@@ -380,7 +393,8 @@ export default function Home() {
                         className="w-24 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg outline-none transition focus:border-mint focus:ring-2 focus:ring-mint/30"
                       />
                       <p className="mt-1 text-xs text-muted">
-                        Default 15 — lebih dari itu otomatis dipecah jadi beberapa slide.
+                        Ikut preset Template ({GRID_PRESETS[templatePreset].maxRows}) — lebih dari itu
+                        otomatis dipecah jadi beberapa slide.
                       </p>
                     </Field>
                   )}
@@ -472,6 +486,40 @@ export default function Home() {
             {selectedKinds.length > 0 && (
               <div className="slide-up-350 mt-5 space-y-5 border-t border-line pt-5">
                 {result && <EditableSchedule rows={rows} onChange={setRows} />}
+
+                {/* Template (kepadatan baris) — kotak menyusut otomatis di keduanya */}
+                <Field icon={<Rows3 className="h-4 w-4" />} label="Template">
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        { key: "lega", name: "Template 1", sub: "Lega · 13 baris" },
+                        { key: "padat", name: "Template 2", sub: "Padat · 15 baris" },
+                      ] as { key: GridPresetKey; name: string; sub: string }[]
+                    ).map((t) => {
+                      const active = templatePreset === t.key;
+                      return (
+                        <button
+                          key={t.key}
+                          onClick={() => pickPreset(t.key)}
+                          aria-pressed={active}
+                          className={`flex flex-col items-start gap-0.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
+                            active
+                              ? "border-mint bg-mint/10 text-fg shadow-mint"
+                              : "border-line bg-surface text-muted hover:border-mint/60 hover:text-fg"
+                          }`}
+                        >
+                          <span className="text-sm font-semibold">{t.name}</span>
+                          <span className={`text-xs ${active ? "text-mint" : "text-muted"}`}>
+                            {t.sub}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted">
+                    Baris yang dihapus otomatis bikin kotak ikut menyusut.
+                  </p>
+                </Field>
 
                 {/* Tanggal */}
                 <Field icon={<CalendarDays className="h-4 w-4" />} label="Tanggal (tampil di desain)">
@@ -603,6 +651,7 @@ export default function Home() {
                           templateSrc={templateFor(slide.kind)}
                           overlay={overlay}
                           autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
+                          gridPreset={templatePreset}
                           ref={(el) => {
                             slideRefs.current[i] = el;
                           }}

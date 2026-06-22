@@ -58,26 +58,46 @@ export interface OverlayConfig {
   dateSize: number;
 }
 
-// Geometri grid template BAWAAN (garis digambar kode, bukan di PNG).
-// Semua baris TINGGINYA SAMA (seragam) — ada sedikit padding di atas agar baris
-// pertama tidak menempel bar "AAP", tanpa membuat sel pertama lebih tinggi.
+// Geometri grid template BAWAAN. Garis baris DAN badan kotak (border + sudut
+// bawah membulat) digambar oleh kode — PNG hanya berisi header, bar "AAP", &
+// footer. Jadi KOTAK ikut MENYUSUT mengikuti jumlah baris (jarak baris tetap).
 export const BUILTIN_GRID = {
-  contentTop: 580, // baris pertama mulai sedikit di bawah bar "AAP" (beri ruang)
-  tableBottom: 1677, // tepi dalam bawah kartu
-  baseRowHeight: 85, // jarak baris saat data sedikit (lega seperti template lama)
+  cardTop: 558, // tepi atas badan kotak (tepat di bawah bar "AAP")
+  contentTop: 580, // pusat baris ke-1 = contentTop + rowHeight/2 (padding atas ~22px)
+  rowPadBottom: 22, // jarak baris terakhir ke tepi bawah kotak
+  emptyBottom: 1677, // tinggi kotak saat belum ada data (tampil seperti template penuh)
+  cardLeft: 109,
+  cardWidth: 862, // tepi kanan = 109 + 862 = 971
+  cardRadius: 20, // radius sudut bawah kotak
+  cardBorderColor: "#AEBFCD",
   lineX0: 114,
   lineX1: 966,
   lineColor: "#D8E1EA",
 };
 
-/**
- * Tinggi baris dinamis & SERAGAM: data sedikit memakai 85px (lega),
- * banyak data (>~13) otomatis dirapatkan agar tetap muat sampai dasar kartu.
- */
-export function gridRowHeight(rowCount: number): number {
-  return Math.min(
-    BUILTIN_GRID.baseRowHeight,
-    (BUILTIN_GRID.tableBottom - BUILTIN_GRID.contentTop) / Math.max(1, rowCount)
+// Dua PRESET kepadatan baris. Di KEDUANYA kotak tetap digambar dinamis & ikut
+// menyusut saat baris dihapus — yang beda hanya tinggi baris & batas maks.
+export type GridPresetKey = "padat" | "lega";
+export const GRID_PRESETS: Record<
+  GridPresetKey,
+  { label: string; maxRows: number; rowHeight: number }
+> = {
+  // Template 2 (default) — rapat, muat 15 baris sebelum footer (y≈1759).
+  padat: { label: "Padat · 15 baris", maxRows: 15, rowHeight: 74 },
+  // Template 1 — baris lebih tinggi/lega, 13 baris penuh tetap mengisi kanvas.
+  lega: { label: "Lega · 13 baris", maxRows: 13, rowHeight: 85 },
+};
+
+/** Jarak baris KONSTAN per preset — yang menyusut adalah KOTAK-nya, bukan jaraknya. */
+export function gridRowHeight(preset: GridPresetKey = "padat"): number {
+  return GRID_PRESETS[preset].rowHeight;
+}
+
+/** Tepi bawah kotak menyesuaikan jumlah baris (menyusut saat data sedikit). */
+export function cardBottomY(rowCount: number, preset: GridPresetKey = "padat"): number {
+  if (rowCount <= 0) return BUILTIN_GRID.emptyBottom;
+  return (
+    BUILTIN_GRID.contentTop + rowCount * gridRowHeight(preset) + BUILTIN_GRID.rowPadBottom
   );
 }
 
@@ -122,14 +142,20 @@ interface TemplateSlideProps {
   overlay: OverlayConfig;
   /** Template bawaan → garis & jarak baris digambar otomatis (dinamis). */
   autoGrid?: boolean;
+  /** Preset kepadatan baris untuk grid bawaan (padat 15 / lega 13). */
+  gridPreset?: GridPresetKey;
 }
 
 const TemplateSlide = forwardRef<HTMLDivElement, TemplateSlideProps>(
-  function TemplateSlide({ slide, dateText, templateSrc, overlay, autoGrid = false }, ref) {
+  function TemplateSlide(
+    { slide, dateText, templateSrc, overlay, autoGrid = false, gridPreset = "padat" },
+    ref
+  ) {
     const o = overlay;
     const n = slide.rows.length;
-    // Grid dinamis (template bawaan): jarak baris & garis menyesuaikan jumlah data.
-    const gridRH = gridRowHeight(n);
+    // Grid dinamis (template bawaan): jarak baris tetap, KOTAK yang menyusut.
+    const gridRH = gridRowHeight(gridPreset);
+    const cardBottom = cardBottomY(n, gridPreset);
     // Semua baris seragam: pusat baris ke-i di tengah selnya masing-masing.
     const rowCenterY = (i: number) =>
       autoGrid
@@ -163,6 +189,26 @@ const TemplateSlide = forwardRef<HTMLDivElement, TemplateSlideProps>(
             objectFit: "fill",
           }}
         />
+
+        {/* Badan kotak (border + sudut bawah membulat) — digambar dinamis agar
+            KOTAK menyusut mengikuti jumlah baris. Atas terbuka (menyatu ke bar AAP). */}
+        {autoGrid && (
+          <div
+            style={{
+              position: "absolute",
+              left: BUILTIN_GRID.cardLeft,
+              width: BUILTIN_GRID.cardWidth,
+              top: BUILTIN_GRID.cardTop,
+              height: cardBottom - BUILTIN_GRID.cardTop,
+              boxSizing: "border-box",
+              borderLeft: `2px solid ${BUILTIN_GRID.cardBorderColor}`,
+              borderRight: `2px solid ${BUILTIN_GRID.cardBorderColor}`,
+              borderBottom: `2px solid ${BUILTIN_GRID.cardBorderColor}`,
+              borderBottomLeftRadius: BUILTIN_GRID.cardRadius,
+              borderBottomRightRadius: BUILTIN_GRID.cardRadius,
+            }}
+          />
+        )}
 
         {/* Garis pemisah baris (digambar dinamis — hanya untuk template bawaan).
             Jumlah garis = jumlah baris − 1, jadi area kosong tidak bergaris. */}
