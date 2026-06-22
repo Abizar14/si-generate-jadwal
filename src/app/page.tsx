@@ -8,15 +8,18 @@ import {
   AlertTriangle,
   Info,
   Plane,
+  PlaneTakeoff,
+  PlaneLanding,
   Eye,
   ShieldCheck,
   UploadCloud,
   CalendarDays,
   Rows3,
   ImageIcon,
-  Pencil,
   ImagePlus,
   SlidersHorizontal,
+  Settings2,
+  Sparkles,
   X,
   ChevronDown,
   Instagram,
@@ -87,6 +90,8 @@ export default function Home() {
   }>({ departure: null, arrival: null });
   const [overlay, setOverlay] = useState<OverlayConfig>(DEFAULT_OVERLAY);
   const [showPos, setShowPos] = useState(false);
+  // Buka/tutup panel "Pengaturan lanjutan" (template sendiri, maks baris, overlay).
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Cek apakah template bawaan benar-benar ada (hindari 404 yang bikin export gagal).
   const [staticAvail, setStaticAvail] = useState<Record<FlightKind, boolean>>({
@@ -243,39 +248,58 @@ export default function Home() {
         </section>
 
         {/* ===================== GENERATE (halaman penuh) ===================== */}
-        <section id="upload" className="snap-page flex min-h-[100svh] items-center px-4 py-24 sm:px-6">
+        <section id="upload" className="snap-page flex min-h-[100svh] items-center px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto w-full max-w-6xl">
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-5 sm:gap-6 lg:grid-cols-2">
           {/* ---------- KARTU 1: UPLOAD ---------- */}
           <Reveal>
-          <section className="card card-hover p-6 sm:p-7">
+          <section className="glass glass-hover p-5 sm:p-7">
             <CardHeader
               step="1"
               icon={<UploadCloud className="h-5 w-5" />}
               title="Pilih Jenis & Upload"
-              desc="Pilih jenis jadwal dulu, lalu upload file untuk mengisinya."
+              desc="Pilih jenis jadwal, lalu upload file untuk mengisinya."
             />
 
-            {/* Pilih jenis → template langsung tampil di preview (boleh dua-duanya) */}
-            <Field icon={<Plane className="h-4 w-4" style={{ transform: "rotate(45deg)" }} />} label="Jenis jadwal (bisa pilih dua-duanya)">
-              <div className="grid grid-cols-2 gap-2">
-                {(["departure", "arrival"] as FlightKind[]).map((k) => (
-                  <button
-                    key={k}
-                    onClick={() => toggleKind(k)}
-                    className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition ${
-                      selectedKinds.includes(k)
-                        ? "border-mint bg-mint/10 text-mint shadow-mint"
-                        : "border-line bg-surface text-muted hover:border-mint hover:text-mint"
-                    }`}
-                  >
-                    {TYPE_LABEL[k]}
-                  </button>
-                ))}
+            {/* Pilih jenis → kartu visual dengan ikon lepas-landas / mendarat */}
+            <Field icon={<Plane className="h-4 w-4" style={{ transform: "rotate(45deg)" }} />} label="Jenis jadwal (bisa dua-duanya)">
+              <div className="grid grid-cols-2 gap-2.5">
+                {(["departure", "arrival"] as FlightKind[]).map((k) => {
+                  const active = selectedKinds.includes(k);
+                  const Icon = k === "departure" ? PlaneTakeoff : PlaneLanding;
+                  return (
+                    <button
+                      key={k}
+                      onClick={() => toggleKind(k)}
+                      aria-pressed={active}
+                      className={`group relative flex flex-col items-center gap-2 rounded-2xl border px-3 py-4 text-sm font-semibold transition ${
+                        active
+                          ? "border-mint/60 bg-mint/10 text-mint shadow-mint"
+                          : "border-line bg-white/[0.02] text-muted hover:border-mint/50 hover:text-fg"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+                          active
+                            ? "bg-mint/15 text-mint"
+                            : "bg-white/[0.04] text-muted group-hover:text-mint"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      {TYPE_LABEL[k]}
+                      {active && (
+                        <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-mint text-[10px] font-bold text-bg">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               {selectedKinds.length > 0 && (
-                <p className="mt-2 text-xs text-mint">
-                  Template siap — upload data untuk mengisi jadwal.
+                <p className="mt-2.5 flex items-center gap-1.5 text-xs text-mint">
+                  <Sparkles className="h-3.5 w-3.5" /> Template siap — upload data untuk mengisi.
                 </p>
               )}
             </Field>
@@ -326,15 +350,50 @@ export default function Home() {
               </div>
             )}
 
-            {/* Template gambar sendiri (opsional) — toggle on/off */}
-            <div className="mt-5 border-t border-line pt-5">
-              <div className="flex items-center justify-between gap-3">
-                <label className="flex items-center gap-1.5 text-sm font-semibold text-fg">
-                  <span className="text-mint"><ImagePlus className="h-4 w-4" /></span>
-                  Template gambar sendiri (opsional)
-                </label>
-                <Toggle checked={overrideEnabled} onChange={setOverrideEnabled} />
-              </div>
+            {/* Pengaturan lanjutan (collapsible) — template sendiri, maks baris, overlay */}
+            {selectedKinds.length > 0 && (
+            <div className="mt-5">
+              <div className="glass-sub overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced((s) => !s)}
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-fg transition hover:text-mint"
+                >
+                  <span className="flex items-center gap-2">
+                    <Settings2 className="h-4 w-4 text-mint" /> Pengaturan lanjutan
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted transition-transform duration-300 ${showAdvanced ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {showAdvanced && (
+                <div className="slide-up-350 space-y-5 border-t border-line/60 px-4 py-4">
+                  {/* Maks baris per slide */}
+                  {result && (
+                    <Field icon={<Rows3 className="h-4 w-4" />} label="Maks baris per slide">
+                      <input
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={maxRows}
+                        onChange={(e) => setMaxRows(Number(e.target.value) || 1)}
+                        className="w-24 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg outline-none transition focus:border-mint focus:ring-2 focus:ring-mint/30"
+                      />
+                      <p className="mt-1 text-xs text-muted">
+                        Default 15 — lebih dari itu otomatis dipecah jadi beberapa slide.
+                      </p>
+                    </Field>
+                  )}
+
+                  {/* Template gambar sendiri (opsional) */}
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="flex items-center gap-1.5 text-sm font-semibold text-fg">
+                        <span className="text-mint"><ImagePlus className="h-4 w-4" /></span>
+                        Template gambar sendiri (opsional)
+                      </label>
+                      <Toggle checked={overrideEnabled} onChange={setOverrideEnabled} />
+                    </div>
 
               {!overrideEnabled && (
                 <p className="mt-2 text-xs text-muted">
@@ -402,7 +461,12 @@ export default function Home() {
                 )}
               </div>
               )}
+                  </div>
+                </div>
+                )}
+              </div>
             </div>
+            )}
 
             {/* Kontrol — aktif setelah jenis dipilih */}
             {selectedKinds.length > 0 && (
@@ -430,23 +494,6 @@ export default function Home() {
                     <span className="text-xs text-muted">pilih untuk isi otomatis</span>
                   </div>
                 </Field>
-
-                {/* Maks baris */}
-                {result && (
-                  <Field icon={<Rows3 className="h-4 w-4" />} label="Maks baris per slide">
-                    <input
-                      type="number"
-                      min={1}
-                      max={30}
-                      value={maxRows}
-                      onChange={(e) => setMaxRows(Number(e.target.value) || 1)}
-                      className="w-24 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg outline-none transition focus:border-mint focus:ring-2 focus:ring-mint/30"
-                    />
-                    <p className="mt-1 text-xs text-muted">
-                      Default 15 — lebih dari itu otomatis dipecah jadi beberapa slide.
-                    </p>
-                  </Field>
-                )}
 
                 {/* Format */}
                 <Field icon={<ImageIcon className="h-4 w-4" />} label="Format gambar">
@@ -524,7 +571,7 @@ export default function Home() {
 
           {/* ---------- KARTU 2: PREVIEW ---------- */}
           <Reveal delay={0.12}>
-          <section className="card card-hover p-6 sm:p-7">
+          <section className="glass glass-hover p-5 sm:p-7">
             <CardHeader
               step="2"
               icon={<Eye className="h-5 w-5" />}
@@ -535,7 +582,7 @@ export default function Home() {
             {parsing ? (
               <PreviewSkeleton />
             ) : selectedKinds.length === 0 ? (
-              <div className="flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl border border-line bg-white/[0.02] text-center">
+              <div className="glass-sub flex min-h-[420px] flex-col items-center justify-center gap-4 text-center">
                 <span className="animate-float inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-mint/10 ring-1 ring-mint/20">
                   <Plane className="h-8 w-8 text-mint" style={{ transform: "rotate(45deg)" }} />
                 </span>
@@ -544,25 +591,27 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="slide-up-350 flex flex-wrap justify-center gap-6">
+              <div className="slide-up-350 flex flex-wrap justify-center gap-5">
                 {visibleSlides.map((slide, i) => (
-                  <div key={`${slide.kind}-${i}`} className="flex flex-col items-center gap-2">
-                    <div className="overflow-hidden rounded-xl shadow-card ring-1 ring-line transition duration-300 hover:-translate-y-1 hover:shadow-card-hover">
-                      <SlidePreview
-                        slide={slide}
-                        dateText={dateText}
-                        scale={0.3}
-                        templateSrc={templateFor(slide.kind)}
-                        overlay={overlay}
-                        autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
-                        ref={(el) => {
-                          slideRefs.current[i] = el;
-                        }}
-                      />
+                  <div key={`${slide.kind}-${i}`} className="group flex flex-col items-center gap-2.5">
+                    <div className="glass-sub overflow-hidden rounded-[20px] p-1 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-card-hover">
+                      <div className="overflow-hidden rounded-2xl ring-1 ring-line">
+                        <SlidePreview
+                          slide={slide}
+                          dateText={dateText}
+                          scale={0.28}
+                          templateSrc={templateFor(slide.kind)}
+                          overlay={overlay}
+                          autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
+                          ref={(el) => {
+                            slideRefs.current[i] = el;
+                          }}
+                        />
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-muted">
+                    <span className="rounded-full bg-white/[0.04] px-3 py-1 text-xs font-medium text-muted ring-1 ring-line">
                       {slide.rows.length === 0
-                        ? "Template siap — upload data untuk mengisi"
+                        ? "Template siap — upload data"
                         : `${slide.title.replace("JADWAL ", "")}${
                             slide.pageCount > 1 ? ` ${slide.pageIndex}/${slide.pageCount}` : ""
                           }`}

@@ -265,6 +265,51 @@ html {
   border-color: rgb(var(--accent) / 0.45);
 }
 
+/* ----- Kartu kaca (glassmorphism) untuk panel Upload & Preview ----- */
+.glass {
+  position: relative;
+  background: rgb(var(--surface) / 0.55);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgb(var(--text) / 0.08);
+  border-radius: 28px;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgb(var(--text) / 0.07);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease, border-color 0.35s ease;
+}
+/* Sorot mint tipis di tepi atas kartu kaca */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    rgb(var(--accent) / 0.35),
+    transparent 35%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.glass-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 34px 70px -26px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgb(var(--text) / 0.09);
+  border-color: rgb(var(--accent) / 0.4);
+}
+/* Sub-panel kaca (di dalam kartu) — untuk pengaturan lanjutan & frame preview */
+.glass-sub {
+  background: rgb(var(--text) / 0.035);
+  border: 1px solid rgb(var(--text) / 0.07);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
 /* ----- Dropzone marching-ants ----- */
 .dropzone {
   position: relative;
