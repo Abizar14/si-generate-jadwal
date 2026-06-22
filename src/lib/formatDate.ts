@@ -30,3 +30,10 @@ export function todayIso(): string {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
+
+/** "YYYY-MM" -> "Juni 2026" untuk judul rekap bulanan. */
+export function bulanLabel(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  if (!y || !m || m < 1 || m > 12) return month;
+  return `${BULAN[m - 1]} ${y}`;
+}

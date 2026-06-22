@@ -211,21 +211,23 @@ const TemplateSlide = forwardRef<HTMLDivElement, TemplateSlideProps>(
         )}
 
         {/* Garis pemisah baris (digambar dinamis — hanya untuk template bawaan).
-            Jumlah garis = jumlah baris − 1, jadi area kosong tidak bergaris. */}
-        {autoGrid &&
-          Array.from({ length: Math.max(0, n - 1) }).map((_, i) => (
-            <div
-              key={`grid-line-${i}`}
-              style={{
-                position: "absolute",
-                left: BUILTIN_GRID.lineX0,
-                width: BUILTIN_GRID.lineX1 - BUILTIN_GRID.lineX0,
-                top: BUILTIN_GRID.contentTop + (i + 1) * gridRH,
-                height: 2,
-                background: BUILTIN_GRID.lineColor,
-              }}
-            />
-          ))}
+            Jumlah garis = jumlah baris − 1, jadi area kosong tidak bergaris.
+            Dirender sebagai SATU lapisan repeating-linear-gradient (bukan banyak
+            div 2px). Saat preview di-scale (mis. 0.28), satu div ini di-scale
+            seragam sehingga TIDAK ada garis yang hilang karena pembulatan
+            sub-piksel — hal yang terjadi bila tiap garis div terpisah. */}
+        {autoGrid && n > 1 && (
+          <div
+            style={{
+              position: "absolute",
+              left: BUILTIN_GRID.lineX0,
+              width: BUILTIN_GRID.lineX1 - BUILTIN_GRID.lineX0,
+              top: BUILTIN_GRID.contentTop,
+              height: (n - 1) * gridRH,
+              backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${gridRH - 2}px, ${BUILTIN_GRID.lineColor} ${gridRH - 2}px, ${BUILTIN_GRID.lineColor} ${gridRH}px)`,
+            }}
+          />
+        )}
 
         {/* Tanggal (pusat di dateX,dateY) */}
         {o.showDate && (

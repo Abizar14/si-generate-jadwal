@@ -26,6 +26,8 @@ import {
   Mail,
   Github,
   FileText,
+  Save,
+  Check,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import UploadFile from "@/components/UploadFile";
@@ -35,8 +37,13 @@ import LogoField from "@/components/LogoField";
 import PlaneScroll from "@/components/PlaneScroll";
 import Navbar from "@/components/Navbar";
 import EditableSchedule from "@/components/EditableSchedule";
+import { FloatingPaths } from "@/components/ui/background-paths";
+import StoryShowcase from "@/components/StoryShowcase";
 import { PaletteSection, PanduanSection, TipsSection } from "@/components/BottomCards";
 import OfficialSchedulePDF from "@/components/OfficialSchedulePDF";
+import RecapCard from "@/components/RecapCard";
+import MonthlyRecap from "@/components/MonthlyRecap";
+import { saveDay } from "@/lib/monthlyStore";
 import {
   type OverlayConfig,
   type GridPresetKey,
@@ -74,8 +81,23 @@ export default function Home() {
   const [exporting, setExporting] = useState(false);
 
   const [dateText, setDateText] = useState(tanggalHariIni());
+  // Tanggal ISO ("YYYY-MM-DD") — jadi kunci penyimpanan rekap bulanan.
+  const [dateIso, setDateIso] = useState(todayIso());
   const [maxRows, setMaxRows] = useState(MAX_ROWS_PER_SLIDE);
   const [format, setFormat] = useState<ImageFormat>("png");
+
+  // Rekap bulanan: penanda agar komponen membaca ulang localStorage setelah simpan,
+  // plus pesan konfirmasi singkat.
+  const [reloadKey, setReloadKey] = useState(0);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
+
+  function handleSaveDay() {
+    if (rows.length === 0) return;
+    saveDay(dateIso, dateText, rows, Date.now());
+    setReloadKey((k) => k + 1);
+    setSavedMsg(`Tersimpan untuk ${dateText}.`);
+    window.setTimeout(() => setSavedMsg(null), 3000);
+  }
 
   // Preset template: "padat" (15 baris, default) / "lega" (13 baris, baris lebih tinggi).
   // Memilih preset juga menyetel maks baris agar kotak & auto-split selaras.
@@ -214,7 +236,16 @@ export default function Home() {
 
       <main id="top" className="relative">
         {/* ===================== HERO (halaman penuh) ===================== */}
-        <section className="snap-page relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center px-4 text-center sm:px-6">
+        <section className="snap-page relative isolate mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center px-4 text-center sm:px-6">
+          {/* Latar garis melengkung beranimasi — menutupi SELURUH layar awal (hero).
+              Pakai w-screen + left-1/2 -translate-x-1/2 supaya nembus keluar dari
+              batas max-w-6xl section dan jadi full-width. 'isolate' di section bikin
+              garis tampil di atas latar halaman tapi tetap di belakang teks hero. */}
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 -z-10 h-full w-screen -translate-x-1/2 overflow-hidden opacity-60">
+            <FloatingPaths position={1} className="text-mint" />
+            <FloatingPaths position={-1} className="text-mint" />
+          </div>
+
           <HeroPlane />
 
           <Reveal delay={0} className="mb-5 inline-flex items-center gap-2 rounded-full bg-mint/10 px-4 py-1.5 text-sm font-semibold text-mint ring-1 ring-mint/20">
@@ -259,6 +290,9 @@ export default function Home() {
             </Reveal>
           </div>
         </section>
+
+        {/* ===================== CONTOH HASIL STORY (galeri kartu kipas) ===================== */}
+        <StoryShowcase />
 
         {/* ===================== GENERATE (halaman penuh) ===================== */}
         <section id="upload" className="snap-page flex min-h-[100svh] items-center px-4 py-16 sm:px-6 sm:py-24">
@@ -532,8 +566,9 @@ export default function Home() {
                   <div className="mt-2 flex items-center gap-2">
                     <input
                       type="date"
-                      defaultValue={todayIso()}
+                      value={dateIso}
                       onChange={(e) => {
+                        setDateIso(e.target.value);
                         const t = isoToIndonesia(e.target.value);
                         if (t) setDateText(t);
                       }}
@@ -639,15 +674,20 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="slide-up-350 flex flex-wrap justify-center gap-5">
+              <div className="slide-up-350 -mx-1 overflow-x-auto pb-3">
+                {/* Deret menyamping: slide berdampingan dalam satu baris.
+                    Inner mx-auto w-max → bila muat otomatis di tengah; bila
+                    lebih lebar dari kartu bisa digeser horizontal (tetap
+                    berdampingan, tidak menumpuk ke bawah). */}
+                <div className="mx-auto flex w-max gap-5 px-1">
                 {visibleSlides.map((slide, i) => (
-                  <div key={`${slide.kind}-${i}`} className="group flex flex-col items-center gap-2.5">
+                  <div key={`${slide.kind}-${i}`} className="group flex flex-shrink-0 flex-col items-center gap-2.5">
                     <div className="glass-sub overflow-hidden rounded-[20px] p-1 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-card-hover">
                       <div className="overflow-hidden rounded-2xl ring-1 ring-line">
                         <SlidePreview
                           slide={slide}
                           dateText={dateText}
-                          scale={0.28}
+                          scale={0.26}
                           templateSrc={templateFor(slide.kind)}
                           overlay={overlay}
                           autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
@@ -667,11 +707,44 @@ export default function Home() {
                     </span>
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </section>
           </Reveal>
             </div>
+
+            {/* ---------- REKAP HARIAN (muncul setelah ada data) ---------- */}
+            {result && rows.length > 0 && (
+              <Reveal delay={0.18} className="mt-5 space-y-4 sm:mt-6">
+                <RecapCard rows={rows} dateText={dateText} />
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    onClick={handleSaveDay}
+                    className="btn-ghost flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold"
+                  >
+                    {savedMsg ? (
+                      <>
+                        <Check className="h-5 w-5 text-mint" /> {savedMsg}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5" /> Simpan ke rekap bulanan ({dateText})
+                      </>
+                    )}
+                  </button>
+                  <p className="max-w-md text-center text-xs text-muted">
+                    Disimpan di browser ini sebagai data tanggal <b>{dateIso}</b>. Menyimpan ulang
+                    tanggal yang sama akan menimpa data lama.
+                  </p>
+                </div>
+              </Reveal>
+            )}
+
+            {/* ---------- REKAP BULANAN (akumulasi dari yang tersimpan) ---------- */}
+            <Reveal delay={0.2} className="mt-5 sm:mt-6">
+              <MonthlyRecap reloadKey={reloadKey} />
+            </Reveal>
           </div>
         </section>
 
