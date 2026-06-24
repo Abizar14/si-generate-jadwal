@@ -28,10 +28,12 @@ import {
   FileText,
   Save,
   Check,
+  Maximize2,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import UploadFile from "@/components/UploadFile";
 import SlidePreview from "@/components/SlidePreview";
+import SlideLightbox from "@/components/SlideLightbox";
 import SkyBackground from "@/components/SkyBackground";
 import LogoField from "@/components/LogoField";
 import PlaneScroll from "@/components/PlaneScroll";
@@ -150,6 +152,10 @@ export default function Home() {
 
   // Ref ke tiap node slide ukuran asli (1080x1920) untuk export.
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Slide yang sedang diperbesar (lightbox) — null = tidak ada. Klik preview
+  // membukanya; berguna terutama di HP agar jadwal kebaca jelas.
+  const [zoomedSlide, setZoomedSlide] = useState<{ slide: Slide; caption: string } | null>(null);
 
   const slides = useMemo(() => {
     const departures = rows.filter((r) => r.kind === "departure");
@@ -680,33 +686,48 @@ export default function Home() {
                     lebih lebar dari kartu bisa digeser horizontal (tetap
                     berdampingan, tidak menumpuk ke bawah). */}
                 <div className="mx-auto flex w-max gap-5 px-1">
-                {visibleSlides.map((slide, i) => (
+                {visibleSlides.map((slide, i) => {
+                  const caption =
+                    slide.rows.length === 0
+                      ? "Template siap — upload data"
+                      : `${slide.title.replace("JADWAL ", "")}${
+                          slide.pageCount > 1 ? ` ${slide.pageIndex}/${slide.pageCount}` : ""
+                        }`;
+                  return (
                   <div key={`${slide.kind}-${i}`} className="group flex flex-shrink-0 flex-col items-center gap-2.5">
-                    <div className="glass-sub overflow-hidden rounded-[20px] p-1 transition duration-300 group-hover:-translate-y-1.5 group-hover:shadow-card-hover">
-                      <div className="overflow-hidden rounded-2xl ring-1 ring-line">
-                        <SlidePreview
-                          slide={slide}
-                          dateText={dateText}
-                          scale={0.26}
-                          templateSrc={templateFor(slide.kind)}
-                          overlay={overlay}
-                          autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
-                          gridPreset={templatePreset}
-                          ref={(el) => {
-                            slideRefs.current[i] = el;
-                          }}
-                        />
+                    <button
+                      type="button"
+                      onClick={() => setZoomedSlide({ slide, caption })}
+                      title="Ketuk untuk memperbesar"
+                      className="relative block cursor-zoom-in rounded-[20px] outline-none transition duration-300 group-hover:-translate-y-1.5 focus-visible:ring-2 focus-visible:ring-mint"
+                    >
+                      <div className="glass-sub overflow-hidden rounded-[20px] p-1 transition duration-300 group-hover:shadow-card-hover">
+                        <div className="overflow-hidden rounded-2xl ring-1 ring-line">
+                          <SlidePreview
+                            slide={slide}
+                            dateText={dateText}
+                            scale={0.26}
+                            templateSrc={templateFor(slide.kind)}
+                            overlay={overlay}
+                            autoGrid={templateFor(slide.kind) === STATIC_TEMPLATE[slide.kind]}
+                            gridPreset={templatePreset}
+                            ref={(el) => {
+                              slideRefs.current[i] = el;
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
+                      {/* Ikon kaca pembesar — petunjuk bisa diketuk untuk memperbesar. */}
+                      <span className="pointer-events-none absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white opacity-90 ring-1 ring-white/20 backdrop-blur-sm sm:opacity-0 sm:transition sm:group-hover:opacity-90">
+                        <Maximize2 className="h-4 w-4" />
+                      </span>
+                    </button>
                     <span className="rounded-full bg-white/[0.04] px-3 py-1 text-xs font-medium text-muted ring-1 ring-line">
-                      {slide.rows.length === 0
-                        ? "Template siap — upload data"
-                        : `${slide.title.replace("JADWAL ", "")}${
-                            slide.pageCount > 1 ? ` ${slide.pageIndex}/${slide.pageCount}` : ""
-                          }`}
+                      {caption}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
                 </div>
               </div>
             )}
@@ -782,6 +803,20 @@ export default function Home() {
           arrivals={allArrivals}
         />
       </div>
+
+      {/* Lightbox: preview slide diperbesar saat diketuk (berguna di HP). */}
+      {zoomedSlide && (
+        <SlideLightbox
+          slide={zoomedSlide.slide}
+          dateText={dateText}
+          templateSrc={templateFor(zoomedSlide.slide.kind)}
+          overlay={overlay}
+          autoGrid={templateFor(zoomedSlide.slide.kind) === STATIC_TEMPLATE[zoomedSlide.slide.kind]}
+          gridPreset={templatePreset}
+          caption={zoomedSlide.caption}
+          onClose={() => setZoomedSlide(null)}
+        />
+      )}
     </>
   );
 }
