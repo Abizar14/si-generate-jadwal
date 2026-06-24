@@ -60,11 +60,38 @@ function parseSection(text: string, kind: FlightKind, warnings: string[]): Fligh
   return out;
 }
 
+/**
+ * Polyfill `Promise.withResolvers` untuk HP/iOS lama & in-app browser
+ * (WhatsApp/Instagram). pdf.js v6 memakai fitur ini, yang baru tersedia di
+ * Safari iOS ≥ 17.4 / Chrome ≥ 119 — tanpa polyfill, upload PDF langsung error
+ * di perangkat yang belum di-update.
+ */
+function ensurePromiseWithResolvers() {
+  const P = Promise as unknown as { withResolvers?: unknown };
+  if (typeof P.withResolvers === "function") return;
+  P.withResolvers = function <T>() {
+    let resolve!: (value: T | PromiseLike<T>) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
+
 /** Baca PDF jadwal AMC menjadi ParseResult (client-side, pakai pdf.js). */
 export async function parsePdfFile(file: File): Promise<ParseResult> {
+  ensurePromiseWithResolvers();
+
   const pdfjs: any = await import("pdfjs-dist");
-  // Worker dari CDN, versinya disamakan dgn paket terpasang.
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+  // Worker dilayani lokal dari /public (bukan CDN) supaya tidak gagal di
+  // in-app browser HP / saat sinyal jelek. File disalin dari paket terpasang
+  // oleh script `copy-pdf-worker` (predev/prebuild) agar versi selalu sinkron.
+  // Bila worker (module worker) tak bisa dimuat di browser lama, pdf.js
+  // otomatis fallback ke main thread — polyfill di atas membuat jalur
+  // fallback itu tetap berfungsi.
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
   let fullText = "";
   try {
