@@ -56,6 +56,11 @@
 html,
 body {
   min-height: 100%;
+  /* Cegah "melebar" di HP: clip apa pun yang menjorok ke samping (blob aurora,
+     galeri story, garis SVG latar) tanpa membuat scroll-container — jadi sticky
+     navbar & scroll-snap tetap normal, dan tidak ada geser horizontal. */
+  overflow-x: clip;
+  max-width: 100%;
   color: rgb(var(--text));
   /* Latar + sorot aksen tipis di sudut (mengikuti tema). */
   background:

@@ -53,6 +53,7 @@ import {
   GRID_PRESETS,
 } from "@/components/TemplateSlide";
 import { parseFile } from "@/lib/parseSchedule";
+import { isChunkLoadError, reloadOnceForStaleChunks } from "@/lib/chunkReload";
 import { buildSlides, MAX_ROWS_PER_SLIDE } from "@/lib/pagination";
 import { downloadAllSlides, type ImageFormat } from "@/lib/exportImage";
 import { tanggalHariIni, isoToIndonesia, todayIso } from "@/lib/formatDate";
@@ -195,7 +196,16 @@ export default function Home() {
       setRows([...parsed.departures, ...parsed.arrivals]);
       setFileName(file.name);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Terjadi kesalahan saat membaca file.");
+      // Deploy basi di HP: chunk pdf.js gagal dimuat (404). Muat ulang sekali
+      // untuk dapat versi terbaru, lalu user tinggal upload lagi.
+      if (isChunkLoadError(e) && reloadOnceForStaleChunks()) return;
+      setError(
+        isChunkLoadError(e)
+          ? "Gagal memuat komponen pembaca PDF (kemungkinan versi halaman lama). Muat ulang halaman lalu coba lagi."
+          : e instanceof Error
+            ? e.message
+            : "Terjadi kesalahan saat membaca file."
+      );
       setFileName(file.name);
     } finally {
       setParsing(false);

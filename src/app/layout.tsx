@@ -51,6 +51,14 @@ export default function RootLayout({
               "try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'mint'}catch(e){document.documentElement.dataset.theme='mint'}",
           }}
         />
+        {/* Jaring pengaman: muat ulang sekali bila chunk/modul dinamis gagal
+            dimuat (deploy basi di HP). Dijaga sessionStorage agar tak loop. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){function isChunk(m){return /ChunkLoadError|Loading chunk [\\w-]+ failed|Loading CSS chunk|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i.test(m||'')}function reload(){try{if(sessionStorage.getItem('chunk-reloaded'))return;sessionStorage.setItem('chunk-reloaded','1')}catch(e){}location.reload()}addEventListener('error',function(e){var t=e&&e.error;if(isChunk(t&&t.message||e.message))reload()});addEventListener('unhandledrejection',function(e){var r=e&&e.reason;if(isChunk(r&&r.message||String(r||'')))reload()})})()",
+          }}
+        />
         {/* Clash Display (judul UI) — tidak tersedia di next/font/google. */}
         <link
           href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap"
