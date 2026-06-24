@@ -84,7 +84,10 @@ function ensurePromiseWithResolvers() {
 export async function parsePdfFile(file: File): Promise<ParseResult> {
   ensurePromiseWithResolvers();
 
-  const pdfjs: any = await import("pdfjs-dist");
+  // "legacy" build = sudah di-transpile (tanpa sintaks modern yang bikin chunk
+  // gagal di-parse di Safari iOS lama / in-app browser HP). Wajib sepasang dgn
+  // worker legacy yang disalin oleh scripts/copy-pdf-worker.mjs.
+  const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
   // Worker dilayani lokal dari /public (bukan CDN) supaya tidak gagal di
   // in-app browser HP / saat sinyal jelek. File disalin dari paket terpasang
   // oleh script `copy-pdf-worker` (predev/prebuild) agar versi selalu sinkron.
