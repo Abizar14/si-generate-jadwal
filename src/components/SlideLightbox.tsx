@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import type { Slide } from "@/lib/types";
 import SlidePreview from "./SlidePreview";
@@ -33,23 +33,24 @@ export default function SlideLightbox({
   caption,
   onClose,
 }: SlideLightboxProps) {
-  // Skala agar slide muat di layar: dibatasi lebar & tinggi (sisakan ruang tepi
-  // + tombol tutup). Dihitung ulang saat ukuran/orientasi layar berubah.
-  const [scale, setScale] = useState(0.3);
+  // Skala agar slide muat di layar. Diukur dari UKURAN KONTAINER NYATA (bukan
+  // window.innerWidth/Height yang tidak andal di HP karena bar browser & beda
+  // visual/layout viewport). Sisakan ruang untuk tepi, tombol tutup, & caption.
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
     function fit() {
-      const vw = window.innerWidth - 32; // sisa tepi kiri-kanan
-      const vh = window.innerHeight - 96; // sisa untuk tombol tutup + tepi
-      setScale(Math.min(vw / 1080, vh / 1920));
+      const w = el!.clientWidth - 32; // tepi kiri-kanan
+      const h = el!.clientHeight - 112; // tombol tutup (atas) + caption (bawah)
+      setScale(Math.max(0, Math.min(w / 1080, h / 1920)));
     }
     fit();
-    window.addEventListener("resize", fit);
-    window.addEventListener("orientationchange", fit);
-    return () => {
-      window.removeEventListener("resize", fit);
-      window.removeEventListener("orientationchange", fit);
-    };
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // Esc untuk menutup + kunci scroll latar selama terbuka.
@@ -68,11 +69,12 @@ export default function SlideLightbox({
 
   return (
     <div
+      ref={overlayRef}
       role="dialog"
       aria-modal="true"
       aria-label="Pratinjau diperbesar"
       onClick={onClose}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-3 bg-black/80 p-4 backdrop-blur-sm"
+      className="fixed inset-x-0 top-0 z-[100] flex h-[100svh] flex-col items-center justify-center gap-3 bg-black/80 p-4 backdrop-blur-sm"
     >
       <button
         type="button"
